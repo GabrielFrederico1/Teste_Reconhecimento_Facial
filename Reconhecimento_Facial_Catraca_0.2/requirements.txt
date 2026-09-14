@@ -1,0 +1,7 @@
+mediapipe>=0.10
+opencv-python
+numpy
+# Para o extrator de embedding real (ExtratorTFLite), instale UMA destas:
+tflite-runtime   # geralmente a melhor opcao no Raspberry Pi
+# ai-edge-litert  # alternativa se tflite-runtime nao tiver wheel para sua plataforma
+# tensorflow      # fallback pesado, so se as duas de cima falharem
