@@ -38,8 +38,8 @@ class DetectorFacial:
         options = vision.FaceLandmarkerOptions(
             base_options=base_options,
             num_faces=5,  # detecta vários rostos para escolher o mais próximo
-            min_face_detection_confidence=0.5,
-            min_face_presence_confidence=0.5,
+            min_face_detection_confidence=0.8, # Aumentado de 0.5 para 0.8 para exigir rosto mais visível
+            min_face_presence_confidence=0.8,
             min_tracking_confidence=0.5,
         )
         self.detector = vision.FaceLandmarker.create_from_options(options)

@@ -1,0 +1,5 @@
+mediapipe>=0.10
+opencv-python
+numpy
+# no Raspberry Pi, para usar o modelo real (ExtratorTFLite):
+# tflite-runtime

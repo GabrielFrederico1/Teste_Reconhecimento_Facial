@@ -61,7 +61,12 @@ def rodar_catraca():
     if not banco.usuarios_cadastrados():
         print("[AVISO] Nenhum usuario cadastrado ainda. Rode registro.py primeiro.")
 
-    cap = cv2.VideoCapture(config.CAMERA_INDEX)
+    import os
+    if os.name == 'nt':
+        cap = cv2.VideoCapture(config.CAMERA_INDEX, cv2.CAP_DSHOW)
+    else:
+        cap = cv2.VideoCapture(config.CAMERA_INDEX)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Reduz o lag (evita acumular frames antigos na fila)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
 
@@ -93,11 +98,18 @@ def rodar_catraca():
                     if nome is not None and similaridade >= config.LIMIAR_SIMILARIDADE:
                         abrir_catraca(usuario=nome, via="facial")
                         frames_sem_rosto_valido = 0
-                        mensagem = f"Bem-vindo, {nome}!"
-                        cv2.putText(frame, mensagem, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.8, (0, 255, 0), 2)
-                        cv2.imshow("Catraca - Prototipo", frame)
-                        cv2.waitKey(1500)  # tempo de exibicao da mensagem de boas-vindas
+                        
+                        # Em vez de pausar o vídeo por 1.5s (o que causa o congelamento),
+                        # mostramos a mensagem na tela por 45 frames (aprox 1.5s) sem travar a câmera
+                        for _ in range(45):
+                            ok, f = cap.read()
+                            if not ok: break
+                            cv2.putText(f, f"Bem-vindo, {nome}!", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                            cv2.imshow("Catraca - Prototipo", f)
+                            cv2.waitKey(1)
+                            
+                        # Limpa o buffer acumulado para a câmera voltar ao tempo real
+                        for _ in range(5): cap.read()
                         continue
                     else:
                         frames_sem_rosto_valido += 1
