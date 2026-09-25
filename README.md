@@ -35,6 +35,21 @@ Rodar a catraca:
 python destravamento.py
 ```
 
+### Gerenciando os cadastros locais
+
+Você pode visualizar e apagar os rostos cadastrados no banco de dados local (`usuarios_embeddings.json`) usando o arquivo `database.py`:
+
+```bash
+# Ver quem está cadastrado
+python database.py listar
+
+# Apagar um usuário específico
+python database.py remover "joao"
+
+# Apagar todos os usuários cadastrados
+python database.py limpar
+```
+
 ## O que falta para a versão "de verdade" (próximos passos do trabalho)
 
 1. **Trocar o `ExtratorPlaceholder` pelo `ExtratorTFLite`**: baixar os pesos do

@@ -53,3 +53,27 @@ class BancoUsuarios:
 
     def usuarios_cadastrados(self):
         return list(self._dados.keys())
+
+if __name__ == "__main__":
+    import sys
+    banco = BancoUsuarios()
+    if len(sys.argv) > 1:
+        comando = sys.argv[1]
+        if comando == "listar":
+            usuarios = banco.usuarios_cadastrados()
+            print("Usuários cadastrados:", usuarios if usuarios else "Nenhum")
+        elif comando == "remover" and len(sys.argv) > 2:
+            nome = sys.argv[2]
+            if nome in banco.usuarios_cadastrados():
+                banco.remover(nome)
+                print(f"[OK] Usuário '{nome}' removido com sucesso.")
+            else:
+                print(f"[ERRO] Usuário '{nome}' não encontrado.")
+        elif comando == "limpar":
+            for u in banco.usuarios_cadastrados():
+                banco.remover(u)
+            print("[OK] Todos os usuários foram removidos.")
+        else:
+            print("Comandos disponíveis: listar, remover <nome>, limpar")
+    else:
+        print("Comandos disponíveis: listar, remover <nome>, limpar")

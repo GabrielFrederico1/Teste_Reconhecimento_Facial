@@ -17,8 +17,8 @@ DISTANCIA_MIN_PROPORCAO = 0.15  # rosto muito pequeno -> pessoa longe demais
 DISTANCIA_MAX_PROPORCAO = 0.70  # rosto muito grande -> pessoa colada na câmera
 
 # --- Detecção de acessórios (heurística via confiança dos landmarks) ---
-CONFIANCA_MIN_OLHOS = 0.5   # abaixo disso, suspeita de óculos escuros/oclusão
-CONFIANCA_MIN_BOCA = 0.5    # abaixo disso, suspeita de máscara
+CONFIANCA_MIN_OLHOS = 0.0138  # abaixo disso, suspeita de óculos escuros/oclusão
+CONFIANCA_MIN_BOCA = 0.0664   # abaixo disso, suspeita de máscara
 
 # --- Câmera ---
 CAMERA_INDEX = 0

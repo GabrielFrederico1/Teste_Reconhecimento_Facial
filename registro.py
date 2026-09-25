@@ -23,7 +23,12 @@ def registrar_usuario(nome_usuario: str):
     extrator = ExtratorPlaceholder()  # trocar por ExtratorTFLite quando o modelo estiver pronto
     banco = BancoUsuarios()
 
-    cap = cv2.VideoCapture(config.CAMERA_INDEX)
+    import os
+    if os.name == 'nt':
+        cap = cv2.VideoCapture(config.CAMERA_INDEX, cv2.CAP_DSHOW)
+    else:
+        cap = cv2.VideoCapture(config.CAMERA_INDEX)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Reduz o lag (evita acumular frames antigos na fila)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
 
@@ -54,8 +59,21 @@ def registrar_usuario(nome_usuario: str):
                 elif acessorios["mascara_detectada"]:
                     mensagem = "Remova a mascara para continuar."
                 else:
-                    mensagem = "OK! Capturando embedding..."
                     embedding = extrator.extrair(frame, rosto.bbox, rosto.landmarks)
+                    
+                    # Verifica se o rosto já existe no banco de dados
+                    nome_existente, similaridade = banco.buscar_mais_proximo(embedding)
+                    
+                    if nome_existente is not None and similaridade >= config.LIMIAR_SIMILARIDADE:
+                        mensagem = f"Erro: Rosto ja cadastrado como '{nome_existente}'."
+                        # Exibe a mensagem de erro por um tempo e cancela
+                        cv2.putText(frame, mensagem, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                        cv2.imshow("Registro Facial - Prototipo", frame)
+                        cv2.waitKey(2500)
+                        print(f"[REGISTRO] Cancelado. Esse rosto já pertence ao usuário '{nome_existente}'.")
+                        break
+                    
+                    mensagem = "OK! Capturando embedding..."
                     banco.cadastrar(nome_usuario, embedding)
                     print(f"[REGISTRO] Usuario '{nome_usuario}' cadastrado com sucesso.")
                     
