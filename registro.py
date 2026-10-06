@@ -14,13 +14,13 @@ import cv2
 
 import config
 from face_utils import DetectorFacial, avaliar_distancia, detectar_acessorios
-from embedding import ExtratorPlaceholder
+from embedding import ExtratorPlaceholder, ExtratorTFLite
 from database import BancoUsuarios
 
 
 def registrar_usuario(nome_usuario: str):
     detector = DetectorFacial()
-    extrator = ExtratorPlaceholder()  # trocar por ExtratorTFLite quando o modelo estiver pronto
+    extrator = ExtratorTFLite("mobilefacenet.tflite")
     banco = BancoUsuarios()
 
     import os
@@ -43,6 +43,7 @@ def registrar_usuario(nome_usuario: str):
 
             rosto = detector.detectar_rosto_mais_proximo(frame)
             mensagem = ""
+            pode_cadastrar = False
 
             if rosto is None:
                 mensagem = "Nenhum rosto detectado. Aproxime-se da câmera."
@@ -55,46 +56,38 @@ def registrar_usuario(nome_usuario: str):
                 elif distancia == "perto_demais":
                     mensagem = "Afaste-se um pouco."
                 elif acessorios["oculos_detectado"]:
-                    mensagem = "Remova os oculos/oculos escuros para continuar."
+                    mensagem = "Remova os oculos/oculos escuros."
                 elif acessorios["mascara_detectada"]:
-                    mensagem = "Remova a mascara para continuar."
+                    mensagem = "Remova a mascara."
                 else:
-                    embedding = extrator.extrair(frame, rosto.bbox, rosto.landmarks)
-                    
-                    # Verifica se o rosto já existe no banco de dados
-                    nome_existente, similaridade = banco.buscar_mais_proximo(embedding)
-                    
-                    if nome_existente is not None and similaridade >= config.LIMIAR_SIMILARIDADE:
-                        mensagem = f"Erro: Rosto ja cadastrado como '{nome_existente}'."
-                        # Exibe a mensagem de erro por um tempo e cancela
-                        cv2.putText(frame, mensagem, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                        cv2.imshow("Registro Facial - Prototipo", frame)
-                        cv2.waitKey(2500)
-                        print(f"[REGISTRO] Cancelado. Esse rosto já pertence ao usuário '{nome_existente}'.")
-                        break
-                    
-                    mensagem = "OK! Capturando embedding..."
-                    banco.cadastrar(nome_usuario, embedding)
-                    print(f"[REGISTRO] Usuario '{nome_usuario}' cadastrado com sucesso.")
-                    
-                    x1, y1, x2, y2 = rosto.bbox
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(frame, mensagem, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                                0.7, (0, 255, 0), 2)
-                    cv2.imshow("Registro Facial - Prototipo", frame)
-                    cv2.waitKey(1500)
-                    break
+                    mensagem = "Rosto OK! Pressione 'c' para cadastrar."
+                    pode_cadastrar = True
 
-            # feedback visual (equivalente ao display de LED no totem real)
-            if rosto is not None:
                 x1, y1, x2, y2 = rosto.bbox
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0) if pode_cadastrar else (0, 0, 255), 2)
+                
+                # Mostra o valor na tela para ajudar a calibrar o config.py
+                debug_txt = f"Confianca Olhos: {acessorios['confianca_olhos']:.4f} (Limiar: {config.CONFIANCA_MIN_OLHOS})"
+                cv2.putText(frame, debug_txt, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+
             cv2.putText(frame, mensagem, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7, (0, 0, 255), 2)
+                        0.7, (0, 255, 0) if pode_cadastrar else (0, 0, 255), 2)
             cv2.imshow("Registro Facial - Prototipo", frame)
 
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
                 print("[REGISTRO] Cancelado pelo usuario.")
+                break
+            elif key == ord("c") and pode_cadastrar:
+                embedding = extrator.extrair(frame, rosto.bbox, rosto.landmarks)
+                nome_existente, similaridade = banco.buscar_mais_proximo(embedding)
+                
+                if nome_existente is not None and similaridade >= config.LIMIAR_SIMILARIDADE:
+                    print(f"[REGISTRO] Erro: Esse rosto já pertence ao usuário '{nome_existente}'.")
+                    break
+                
+                banco.cadastrar(nome_usuario, embedding)
+                print(f"[REGISTRO] Usuario '{nome_usuario}' cadastrado com sucesso.")
                 break
     finally:
         cap.release()

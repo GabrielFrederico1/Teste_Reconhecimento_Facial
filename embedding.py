@@ -39,14 +39,33 @@ class ExtratorPlaceholder(ExtratorEmbedding):
     """
 
     def extrair(self, frame_bgr, bbox, landmarks) -> np.ndarray:
+        # Pega as coordenadas x, y, z
         pontos = np.array([[lm.x, lm.y, lm.z] for lm in landmarks])
-        centro = pontos.mean(axis=0)
-        vetor = (pontos - centro).flatten()
-        # reduz para um vetor de tamanho fixo (128) via amostragem, só para o placeholder
-        passo = max(1, len(vetor) // 128)
-        vetor = vetor[::passo][:128]
+        
+        # Usa pontos chave de referência para invariância:
+        # 33: canto externo olho esquerdo, 263: canto externo olho direito, 1: ponta do nariz
+        olho_esq = pontos[33]
+        olho_dir = pontos[263]
+        nariz = pontos[1]
+        
+        # Distância entre os olhos usada para normalizar a escala do rosto
+        dist_olhos = np.linalg.norm(olho_esq - olho_dir)
+        if dist_olhos == 0:
+            dist_olhos = 1e-6
+            
+        # Calcula vetor de distâncias de cada ponto para o nariz
+        # Isso dá uma "assinatura topológica" do rosto, invariante à posição e escala
+        distancias = np.linalg.norm(pontos - nariz, axis=1) / dist_olhos
+        
+        # Centraliza o vetor de distâncias para destacar mais as variações entre pessoas
+        distancias = distancias - distancias.mean()
+        
+        # Reduz para um vetor de tamanho fixo (128) via amostragem
+        passo = max(1, len(distancias) // 128)
+        vetor = distancias[::passo][:128]
         if len(vetor) < 128:
             vetor = np.pad(vetor, (0, 128 - len(vetor)))
+            
         norma = np.linalg.norm(vetor)
         return vetor / norma if norma > 0 else vetor
 
