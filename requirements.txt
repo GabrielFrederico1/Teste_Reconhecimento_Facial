@@ -1,6 +1,57 @@
+# =============================================================================
+# DEPENDENCIAS  (instalar com: pip install -r requirements.txt)
+# =============================================================================
 mediapipe>=0.10
 opencv-python
 numpy
-# no Raspberry Pi, para usar o modelo real (ExtratorTFLite):
-# tflite-runtime
 pyserial
+
+# Runtime do modelo de embedding (MobileFaceNet .tflite). Instalar UM dos dois:
+#   - No Raspberry Pi / Linux:  pip install tflite-runtime
+#   - No PC (fallback):         pip install tensorflow
+# tflite-runtime
+# tensorflow
+
+# =============================================================================
+# COMANDOS PARA EXECUCAO DO RECONHECIMENTO  (rodar na raiz do projeto)
+# =============================================================================
+#
+# 1) Preparar o ambiente (uma vez)
+#      python -m venv .venv
+#      source .venv/bin/activate            # Windows: .venv\Scripts\activate
+#      pip install -r requirements.txt
+#
+# 2) Arquivos de modelo exigidos na raiz do projeto
+#      face_landmarker.task   (MediaPipe) baixar de:
+#        https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
+#      mobilefacenet.tflite   (embedding)
+#
+# 3) Configurar em config.py (antes de rodar)
+#      CAMERA_INDEX     indice da webcam (0, 1, 2...)
+#      PORTA_ARDUINO    ex: "/dev/ttyACM0" (Linux) ou "COM3" (Windows); None = sem display/RFID
+#
+# 4) Cadastrar um usuario (webcam)
+#      python registro.py "joao"
+#      - Posicione-se de frente, dentro da faixa de distancia, sem oculos/mascara
+#      - Pressione 'c' para iniciar: sao capturados 5 frames validos e o embedding
+#        salvo e a MEDIA deles. Pressione 'q' para cancelar.
+#      - A tela mostra os valores para calibracao: Bordas olhos, Boca, Dist.olhos,
+#        yaw, pitch e nitidez
+#
+# 5) Rodar a catraca (reconhecimento + fallback RFID)
+#      python destravamento.py
+#      - Exige distancia (faixa DESTRAVAMENTO_*), pose frontal e nitidez antes de comparar
+#      - Pressione 'q' para encerrar
+#
+# 6) Gerenciar os cadastros (usuarios_embeddings.json)
+#      python database.py listar
+#      python database.py remover "joao"
+#      python database.py limpar
+#
+# 7) Refazer cadastros apos mudar criterios de qualidade/distancia (embeddings antigos
+#    foram gerados com 1 frame e outros criterios)
+#      python database.py limpar
+#      python registro.py "joao"
+#
+# 8) Verificar sintaxe rapidamente (opcional)
+#      python -m py_compile face_utils.py registro.py destravamento.py config.py
