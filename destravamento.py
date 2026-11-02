@@ -17,7 +17,7 @@ import cv2
 import serial
 
 import config
-from face_utils import DetectorFacial, avaliar_distancia
+from face_utils import DetectorFacial, avaliar_distancia, avaliar_qualidade
 from embedding import ExtratorPlaceholder, ExtratorTFLite
 from database import BancoUsuarios
 
@@ -117,10 +117,19 @@ def rodar_catraca():
                 frames_sem_rosto_valido += 1
                 mensagem = "Aproxime o rosto da catraca."
             else:
-                distancia = avaliar_distancia(rosto)
-                if distancia != "ok":
+                distancia = avaliar_distancia(rosto, modo="destravamento")
+                qualidade = avaliar_qualidade(rosto, modo="destravamento")
+                if distancia == "longe":
                     frames_sem_rosto_valido += 1
-                    mensagem = "Ajuste a distancia do rosto."
+                    mensagem = "Aproxime-se um pouco mais."
+                elif distancia == "perto_demais":
+                    frames_sem_rosto_valido += 1
+                    mensagem = "Afaste-se um pouco."
+                elif qualidade != "ok":
+                    frames_sem_rosto_valido += 1
+                    mensagem = {"virado": "Olhe de frente para a camera.",
+                                "inclinado": "Mantenha a cabeca reta.",
+                                "borrado": "Imagem borrada. Fique parado."}[qualidade]
                 else:
                     embedding = extrator.extrair(frame, rosto.bbox, rosto.landmarks)
                     nome, similaridade = banco.buscar_mais_proximo(embedding)
