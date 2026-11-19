@@ -15,7 +15,7 @@ import cv2
 
 import config
 from face_utils import DetectorFacial, avaliar_distancia, avaliar_qualidade, detectar_acessorios
-from embedding import ExtratorPlaceholder, ExtratorTFLite, similaridade_cosseno
+from embedding import ExtratorTFLite, similaridade_cosseno
 from database import BancoUsuarios
 
 

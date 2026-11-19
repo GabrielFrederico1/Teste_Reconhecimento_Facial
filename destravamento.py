@@ -17,7 +17,7 @@ import serial
 
 import config
 from face_utils import DetectorFacial, avaliar_distancia, avaliar_qualidade
-from embedding import ExtratorPlaceholder, ExtratorTFLite
+from embedding import ExtratorTFLite
 from database import BancoUsuarios
 
 
