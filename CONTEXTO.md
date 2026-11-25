@@ -109,18 +109,6 @@ Resumo: `python registro.py "nome"` e `python destravamento.py`.
 5. (Opcional, se sobrar tempo) treinar um classificador leve (MobileNetV2)
    para detecção de acessórios em vez das heurísticas atuais.
 
-## Convenções e decisões já tomadas (não reabrir sem motivo forte)
-
-- Terminologia: sempre "trabalho da disciplina", nunca "TCC".
-- Comentários e nomes de variáveis em português, consistente com o resto
-  da documentação do projeto (`Fluxo_de_funcionamento`, `Componentes`, etc.).
-- Banco de dados do protótipo é JSON local por simplicidade — não sugerir
-  migração para um banco relacional a menos que o usuário peça, já que foge
-  do escopo de um protótipo de disciplina.
-- Câmera é acessada via OpenCV (`cv2.VideoCapture`) diretamente pela webcam
-  local durante o desenvolvimento; no Pi final, o mesmo código deve
-  funcionar trocando `CAMERA_INDEX` em `config.py`.
-
 ## O que evitar
 
 - Não sugerir usar `face_recognition`/`dlib` para o embedding final — o
